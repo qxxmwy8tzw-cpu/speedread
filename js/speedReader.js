@@ -101,13 +101,17 @@ class SpeedReader {
     let charCount = 0;
     let i = this.currentIndex;
 
+    // Quote patterns - both straight and curly
+    const startsWithQuote = /^["'"'«"]/;
+    const endsWithQuote = /["'"'»"]$/;
+
     while (i < this.words.length && group.length < 3) {
       const word = this.words[i];
       const wordLen = word.length;
       const newCharCount = charCount + (group.length > 0 ? 1 : 0) + wordLen; // +1 for space
 
       // If word starts with quote and we already have words, stop before this word
-      if (group.length > 0 && /^["'"'«]/.test(word)) {
+      if (group.length > 0 && startsWithQuote.test(word)) {
         break;
       }
 
@@ -120,8 +124,13 @@ class SpeedReader {
       charCount = newCharCount;
       i++;
 
-      // If word ends with sentence punctuation or closing quote, end the group
-      if (/[.!?]["'"'»]?$/.test(word) || /["'"'»]$/.test(word)) {
+      // If word ends with quote, end the group (quote must end group)
+      if (endsWithQuote.test(word)) {
+        break;
+      }
+
+      // If word ends with sentence punctuation, end the group
+      if (/[.!?]$/.test(word)) {
         break;
       }
 
