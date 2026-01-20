@@ -61,6 +61,7 @@ const App = {
 
       // New navigation controls
       restartChapter: document.getElementById('restart-chapter'),
+      toggleGrouping: document.getElementById('toggle-grouping'),
       setBookmark: document.getElementById('set-bookmark'),
       gotoBookmark: document.getElementById('goto-bookmark'),
       rewindAction: document.getElementById('rewind-action'),
@@ -126,6 +127,12 @@ const App = {
     // Restart chapter
     this.elements.restartChapter.addEventListener('click', () => {
       this.restartChapter();
+    });
+
+    // Toggle grouping
+    this.elements.toggleGrouping.addEventListener('click', () => {
+      const enabled = this.reader.toggleGrouping();
+      Storage.saveSettings({ grouping: enabled });
     });
 
     // Bookmark controls
@@ -249,10 +256,18 @@ const App = {
             this.reader.currentIndex
           );
         }
+      },
+      onGroupingChange: (enabled) => {
+        this.updateGroupingUI(enabled);
       }
     });
 
     this.updateWPMDisplay(settings.wpm);
+
+    // Restore grouping setting
+    if (settings.grouping) {
+      this.reader.setGrouping(true);
+    }
   },
 
   /**
@@ -502,6 +517,13 @@ const App = {
    */
   updateWPMDisplay(wpm) {
     this.elements.wpmDisplay.textContent = `${wpm} WPM`;
+  },
+
+  /**
+   * Update grouping button UI
+   */
+  updateGroupingUI(enabled) {
+    this.elements.toggleGrouping.style.backgroundColor = enabled ? 'var(--accent-color)' : '';
   },
 
   /**

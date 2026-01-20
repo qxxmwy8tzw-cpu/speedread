@@ -9,11 +9,17 @@ class SpeedReader {
     this.isPlaying = false;
     this.timer = null;
 
+    // Grouping mode
+    this.groupingEnabled = false;
+    this.minGroupChars = 8;
+    this.maxGroupChars = 14;
+
     // Callbacks
     this.onWordChange = options.onWordChange || (() => {});
     this.onProgressChange = options.onProgressChange || (() => {});
     this.onComplete = options.onComplete || (() => {});
     this.onPlayStateChange = options.onPlayStateChange || (() => {});
+    this.onGroupingChange = options.onGroupingChange || (() => {});
 
     // WPM limits
     this.minWPM = 100;
@@ -83,11 +89,114 @@ class SpeedReader {
   }
 
   /**
-   * Update the display with current word
+   * Get a group of words starting from current index
+   * Returns { text: string, wordCount: number }
+   */
+  getWordGroup() {
+    if (!this.groupingEnabled) {
+      return { text: this.words[this.currentIndex] || '', wordCount: 1 };
+    }
+
+    let group = [];
+    let charCount = 0;
+    let i = this.currentIndex;
+
+    while (i < this.words.length && group.length < 3) {
+      const word = this.words[i];
+      const wordLen = word.length;
+      const newCharCount = charCount + (group.length > 0 ? 1 : 0) + wordLen; // +1 for space
+
+      // If word starts with quote and we already have words, stop before this word
+      if (group.length > 0 && /^["'"'«]/.test(word)) {
+        break;
+      }
+
+      // If adding this word exceeds max and we have at least one word, stop
+      if (newCharCount > this.maxGroupChars && group.length > 0) {
+        break;
+      }
+
+      group.push(word);
+      charCount = newCharCount;
+      i++;
+
+      // If word ends with sentence punctuation or closing quote, end the group
+      if (/[.!?]["'"'»]?$/.test(word) || /["'"'»]$/.test(word)) {
+        break;
+      }
+
+      // If we've reached ideal range (8-14), we can stop
+      if (charCount >= this.minGroupChars) {
+        break;
+      }
+    }
+
+    return { text: group.join(' '), wordCount: group.length };
+  }
+
+  /**
+   * Get parts for a group of words (focal point in center of entire group)
+   */
+  getGroupParts(text) {
+    if (!text) return { before: '', focus: '', after: '' };
+
+    // Find the center character position of the entire text
+    const centerPos = Math.floor(text.length / 2);
+
+    // Find the closest alphanumeric character to center
+    let focusIndex = centerPos;
+
+    // Search outward from center to find an alphanumeric char
+    for (let offset = 0; offset <= text.length; offset++) {
+      if (centerPos - offset >= 0 && /[a-zA-Z0-9]/.test(text[centerPos - offset])) {
+        focusIndex = centerPos - offset;
+        break;
+      }
+      if (centerPos + offset < text.length && /[a-zA-Z0-9]/.test(text[centerPos + offset])) {
+        focusIndex = centerPos + offset;
+        break;
+      }
+    }
+
+    return {
+      before: text.substring(0, focusIndex),
+      focus: text[focusIndex] || '',
+      after: text.substring(focusIndex + 1)
+    };
+  }
+
+  /**
+   * Toggle grouping mode
+   */
+  toggleGrouping() {
+    this.groupingEnabled = !this.groupingEnabled;
+    this.onGroupingChange(this.groupingEnabled);
+    this.updateDisplay();
+    return this.groupingEnabled;
+  }
+
+  /**
+   * Set grouping mode
+   */
+  setGrouping(enabled) {
+    this.groupingEnabled = enabled;
+    this.onGroupingChange(this.groupingEnabled);
+    this.updateDisplay();
+  }
+
+  /**
+   * Update the display with current word or group
    */
   updateDisplay() {
-    const word = this.words[this.currentIndex] || '';
-    const parts = this.getWordParts(word);
+    let parts;
+
+    if (this.groupingEnabled) {
+      const group = this.getWordGroup();
+      parts = this.getGroupParts(group.text);
+    } else {
+      const word = this.words[this.currentIndex] || '';
+      parts = this.getWordParts(word);
+    }
 
     this.onWordChange(parts);
 
@@ -141,8 +250,14 @@ class SpeedReader {
   scheduleNextWord() {
     if (!this.isPlaying) return;
 
-    const currentWord = this.words[this.currentIndex] || '';
-    const delay = this.calculateDelay(currentWord);
+    let delay;
+    if (this.groupingEnabled) {
+      const group = this.getWordGroup();
+      delay = this.calculateGroupDelay(group.text, group.wordCount);
+    } else {
+      const currentWord = this.words[this.currentIndex] || '';
+      delay = this.calculateDelay(currentWord);
+    }
 
     this.timer = setTimeout(() => {
       this.advance();
@@ -184,16 +299,36 @@ class SpeedReader {
   }
 
   /**
-   * Advance to next word
+   * Calculate delay for a group of words
+   */
+  calculateGroupDelay(text, wordCount) {
+    // Base delay per word
+    const baseMs = 60000 / this.wpm;
+
+    // Multiply by word count with slight efficiency bonus for reading groups
+    const groupMs = baseMs * wordCount * 0.85;
+
+    // Add extra time for sentence-ending punctuation
+    if (/[.!?]$/.test(text)) {
+      return groupMs * 1.2;
+    }
+
+    return groupMs;
+  }
+
+  /**
+   * Advance to next word or group
    */
   advance() {
+    const advanceBy = this.groupingEnabled ? this.getWordGroup().wordCount : 1;
+
     if (this.currentIndex >= this.words.length - 1) {
       this.pause();
       this.onComplete();
       return;
     }
 
-    this.currentIndex++;
+    this.currentIndex = Math.min(this.currentIndex + advanceBy, this.words.length - 1);
     this.updateDisplay();
 
     if (this.isPlaying) {
@@ -269,7 +404,8 @@ class SpeedReader {
       currentIndex: this.currentIndex,
       totalWords: this.words.length,
       wpm: this.wpm,
-      isPlaying: this.isPlaying
+      isPlaying: this.isPlaying,
+      groupingEnabled: this.groupingEnabled
     };
   }
 }
