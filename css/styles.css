@@ -492,6 +492,42 @@ body {
   }
 }
 
+/* Small screens (iPhone SE, etc.) */
+@media (max-width: 400px) {
+  .control-btn {
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .play-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .play-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  #wpm-display {
+    min-width: 56px;
+    font-size: 12px;
+  }
+
+  .wpm-control {
+    gap: 4px;
+  }
+
+  .controls-main {
+    gap: 4px;
+  }
+
+  .reader-controls {
+    padding: 12px 12px;
+    gap: 8px;
+  }
+}
+
 /* Landscape Mode */
 @media (orientation: landscape) and (max-height: 500px) {
   .header {
