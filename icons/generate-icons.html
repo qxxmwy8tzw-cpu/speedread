@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate SpeedRead Icons</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+    canvas { border: 1px solid #333; margin: 10px; }
+    button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+    a { color: #ff3b30; }
+  </style>
+</head>
+<body>
+  <h1>SpeedRead Icon Generator</h1>
+  <p>Click the buttons below to download the PNG icons, then save them to the icons folder.</p>
+
+  <div>
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <canvas id="icon512" width="512" height="512"></canvas>
+  </div>
+
+  <div>
+    <button onclick="downloadIcon(192)">Download 192x192</button>
+    <button onclick="downloadIcon(512)">Download 512x512</button>
+  </div>
+
+  <script>
+    function drawIcon(size) {
+      const canvas = document.getElementById('icon' + size);
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#000000';
+      roundRect(ctx, 0, 0, size, size, size * 0.175);
+      ctx.fill();
+
+      // Text settings
+      const fontSize = size * 0.35;
+      ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const y = size * 0.52;
+      const spacing = size * 0.18;
+
+      // S (white)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('S', size * 0.33, y);
+
+      // R (red - focal letter)
+      ctx.fillStyle = '#ff3b30';
+      ctx.fillText('R', size * 0.5, y);
+
+      // d (white)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('d', size * 0.67, y);
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function downloadIcon(size) {
+      const canvas = document.getElementById('icon' + size);
+      const link = document.createElement('a');
+      link.download = `icon-${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Draw both icons on load
+    drawIcon(192);
+    drawIcon(512);
+  </script>
+</body>
+</html>
