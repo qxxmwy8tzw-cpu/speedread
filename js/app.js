@@ -69,7 +69,11 @@ const App = {
 
       // Loading
       loadingOverlay: document.getElementById('loading-overlay'),
-      loadingText: document.getElementById('loading-text')
+      loadingText: document.getElementById('loading-text'),
+
+      // Word position
+      wordPosition: document.getElementById('word-position'),
+      positionDisplay: document.getElementById('position-display')
     };
   },
 
@@ -172,6 +176,12 @@ const App = {
       this.elements.readerControls.classList.toggle('hidden');
     });
 
+    // Tap word position to jump to specific word
+    this.elements.wordPosition.addEventListener('click', (e) => {
+      e.stopPropagation(); // Don't toggle controls
+      this.promptJumpToWord();
+    });
+
     // Keyboard controls
     document.addEventListener('keydown', (e) => {
       if (!this.elements.readerView.classList.contains('active')) return;
@@ -222,6 +232,13 @@ const App = {
       onPlayStateChange: (isPlaying) => {
         this.elements.playIcon.style.display = isPlaying ? 'none' : 'block';
         this.elements.pauseIcon.style.display = isPlaying ? 'block' : 'none';
+        // Show/hide word position when paused/playing
+        if (isPlaying) {
+          this.elements.wordPosition.classList.add('hidden');
+        } else {
+          this.updatePositionDisplay();
+          this.elements.wordPosition.classList.remove('hidden');
+        }
       },
       onComplete: () => {
         // Save progress at end
@@ -421,6 +438,10 @@ const App = {
 
     // Update bookmark UI
     this.updateBookmarkUI();
+
+    // Show word position (reader starts paused)
+    this.updatePositionDisplay();
+    this.elements.wordPosition.classList.remove('hidden');
   },
 
   /**
@@ -562,6 +583,33 @@ const App = {
    */
   hideLoading() {
     this.elements.loadingOverlay.classList.remove('active');
+  },
+
+  /**
+   * Update word position display
+   */
+  updatePositionDisplay() {
+    const state = this.reader.getState();
+    const current = (state.currentIndex + 1).toLocaleString();
+    const total = state.totalWords.toLocaleString();
+    this.elements.positionDisplay.textContent = `${current} / ${total}`;
+  },
+
+  /**
+   * Prompt user to jump to a specific word number
+   */
+  promptJumpToWord() {
+    const state = this.reader.getState();
+    const input = prompt(`Jump to word (1-${state.totalWords}):`, state.currentIndex + 1);
+
+    if (input !== null) {
+      const wordNum = parseInt(input, 10);
+      if (!isNaN(wordNum) && wordNum >= 1 && wordNum <= state.totalWords) {
+        this.reader.setIndex(wordNum - 1);
+        this.updatePositionDisplay();
+        this.saveProgress();
+      }
+    }
   },
 
   /**

@@ -318,6 +318,29 @@ body {
   transition: width 0.1s linear;
 }
 
+/* Word Position Display */
+.word-position {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-secondary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.word-position:active {
+  background-color: var(--bg-tertiary);
+}
+
+.word-position span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
 /* Reader Controls */
 .reader-controls {
   display: flex;
