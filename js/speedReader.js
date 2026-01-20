@@ -158,10 +158,14 @@ class SpeedReader {
       }
     }
 
+    // Replace spaces with non-breaking spaces to prevent HTML collapsing
+    const before = text.substring(0, focusIndex).replace(/ /g, '\u00A0');
+    const after = text.substring(focusIndex + 1).replace(/ /g, '\u00A0');
+
     return {
-      before: text.substring(0, focusIndex),
+      before: before,
       focus: text[focusIndex] || '',
-      after: text.substring(focusIndex + 1)
+      after: after
     };
   }
 
