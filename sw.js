@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speedread-v4';
+const CACHE_NAME = 'speedread-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
   '/js/app.js',
   '/js/storage.js',
   '/js/pdfExtractor.js',
+  '/js/epubExtractor.js',
   '/js/llamaService.js',
   '/js/chapterDetector.js',
   '/js/speedReader.js',

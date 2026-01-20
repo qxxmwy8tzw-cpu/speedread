@@ -45,11 +45,11 @@
           <polyline points="14 2 14 8 20 8"></polyline>
         </svg>
         <p>No books yet</p>
-        <p class="hint">Tap + to import a PDF</p>
+        <p class="hint">Tap + to import a PDF or EPUB</p>
       </div>
     </main>
 
-    <input type="file" id="pdf-input" accept="application/pdf" hidden>
+    <input type="file" id="pdf-input" accept="application/pdf,application/epub+zip,.epub" hidden>
   </div>
 
   <!-- Chapter List View -->
@@ -172,9 +172,13 @@
   <!-- PDF.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+  <!-- JSZip for EPUB support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <!-- App Scripts -->
   <script src="js/storage.js"></script>
   <script src="js/pdfExtractor.js"></script>
+  <script src="js/epubExtractor.js"></script>
   <script src="js/llamaService.js"></script>
   <script src="js/chapterDetector.js"></script>
   <script src="js/speedReader.js"></script>

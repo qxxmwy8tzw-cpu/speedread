@@ -328,27 +328,40 @@ const App = {
   },
 
   /**
-   * Import a PDF file
+   * Import a PDF or EPUB file
    */
   async importPDF(file) {
-    this.showLoading('Processing PDF...');
+    const isEPUB = file.name.toLowerCase().endsWith('.epub') ||
+                   file.type === 'application/epub+zip';
+
+    this.showLoading(isEPUB ? 'Processing EPUB...' : 'Processing PDF...');
 
     try {
-      // Extract text from PDF
-      const result = await PDFExtractor.extractText(file, (page, total) => {
-        this.updateLoadingText(`Extracting page ${page} of ${total}...`);
-      });
+      let title, chapters;
 
-      let text = result.text;
+      if (isEPUB) {
+        // Extract from EPUB (chapters come pre-detected)
+        const result = await EPUBExtractor.extract(file, (current, total) => {
+          this.updateLoadingText(`Processing chapter ${current} of ${total}...`);
+        });
+        title = result.title;
+        chapters = result.chapters;
+      } else {
+        // Extract text from PDF
+        const result = await PDFExtractor.extractText(file, (page, total) => {
+          this.updateLoadingText(`Extracting page ${page} of ${total}...`);
+        });
 
-      this.updateLoadingText('Detecting chapters...');
+        this.updateLoadingText('Detecting chapters...');
 
-      // Use enhanced chapter detection (with LLM if available, regex fallback)
-      const chapters = await ChapterDetector.detectChaptersEnhanced(text);
+        // Use enhanced chapter detection (with LLM if available, regex fallback)
+        chapters = await ChapterDetector.detectChaptersEnhanced(result.text);
+        title = result.title;
+      }
 
       // Save to storage
       const book = Storage.addBook({
-        title: result.title,
+        title: title,
         chapters: chapters
       });
 
@@ -360,8 +373,8 @@ const App = {
       this.openBook(book.id);
 
     } catch (error) {
-      console.error('Error importing PDF:', error);
-      alert('Failed to import PDF. Please try another file.');
+      console.error('Error importing file:', error);
+      alert(`Failed to import ${isEPUB ? 'EPUB' : 'PDF'}. Please try another file.`);
       this.hideLoading();
     }
   },
